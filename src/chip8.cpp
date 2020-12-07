@@ -6,6 +6,11 @@
 int main(int argc, char** argv)
 {
 	VirtualChip8 vm;
-	vm.Run(argv[1]);
+	if (argc == 2) {
+		vm.Run(argv[1]);
+	}
+	else {
+		std::cout << "Usage: chip8.exe program" << std::endl;
+	}
 	return 0;
 }
