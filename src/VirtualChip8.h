@@ -23,7 +23,8 @@ class VirtualChip8 {
 public:
 	VirtualChip8();
 	~VirtualChip8();
-	void Run(std::string filename);
+	void LoadGame(std::string filename);
+	void EmulateCycle();
 private:
 	Memory mem;
 	// VF doubles as a flag in some cases:
