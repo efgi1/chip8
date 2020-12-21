@@ -2,6 +2,8 @@
 #define VIRTUALCHIP8_H
 
 #include <iostream>
+#include <ctime>
+#include <stdio.h>
 #include <fstream>
 #include <Windows.h>
 #include <intrin.h>
