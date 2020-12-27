@@ -41,7 +41,7 @@ struct Memory {
 	unsigned char* ENTIRE = new unsigned char[MEM_SIZE];
 	unsigned char* fontset = ENTIRE;								// 0x000 - 0x1FF
 	unsigned char* code = ENTIRE + 0x200;							// 0x200 - 0xE9F
-	unsigned char* stack = ENTIRE + 0xEA0;							// 0xEA0 - 0xEFF
+	unsigned char* stack = ENTIRE + 0xEFF;							// 0xEA0 - 0xEFF starting at 0xEFF
 	unsigned char* disp_ref = ENTIRE + 0xF00;						// 0xF00 - 0xFFF
 };
 
@@ -51,7 +51,7 @@ class VirtualChip8 {
 public:
 	VirtualChip8();
 	~VirtualChip8();
-	void LoadGame(std::string filename);
+	void LoadCode(std::string filename);
 	void EmulateCycle();
 	Display display;
 private:
@@ -62,8 +62,8 @@ private:
 	// Subtraction - "no borrow" flag
 	// Draw - set upon pixel collision
 	unsigned char* V;
-	unsigned short I;
-	unsigned short pc;
+	unsigned int I;
+	unsigned int pc;
 	unsigned short sp;
 
 	unsigned char *key;

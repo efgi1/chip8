@@ -33,17 +33,28 @@ VirtualChip8::~VirtualChip8() {
 }
 
 // Reads the file and stores it in mem.code
-void VirtualChip8::LoadGame(std::string filename) {
-	std::ifstream f(filename, std::ios::binary | std::ios::in);
-	if (!f.is_open()) {
-		std::cerr << "Coud not open file." << std::endl;
-		exit(1);
-	}
-	char byte;
-	unsigned int count = 0;
-	while (f.get(byte)) {
-		mem.code[count] = byte;
-		count++;
+void VirtualChip8::LoadCode(std::string filename) {
+	// Open the file as a stream of binary and move the file pointer to the end
+	std::ifstream file(filename, std::ios::binary | std::ios::ate);
+
+	if (file.is_open())
+	{
+		// Get size of file and allocate a buffer to hold the contents
+		std::streampos size = file.tellg();
+		char* buffer = new char[size];
+
+		// Go back to the beginning of the file and fill the buffer
+		file.seekg(0, std::ios::beg);
+		file.read(buffer, size);
+		file.close();
+
+		// Load the ROM contents into the Chip8's memory, starting at 0x200
+		for (long i = 0; i < size; ++i)
+		{
+			mem.code[i] = buffer[i];
+		}
+
+		delete[] buffer;
 	}
 }
 
@@ -54,10 +65,15 @@ void VirtualChip8::EmulateCycle() {
 	unsigned short big, inst, opcode, x, y, kk, nnn, n;
 	bool collision;
 	const unsigned short FONTSET_SPRITE_SIZE = 10;
-	big = *((unsigned short*)(mem.code + pc));
-	pc++;
-
+	big = *((unsigned short*)(mem.code) + pc);
 	inst = _byteswap_ushort(big);
+	std::cout << std::hex << "pc: " << pc << std::endl;
+	std::cout << "Location: " << (unsigned short*)(mem.code) + pc << std::endl;
+	pc++;
+	
+
+	
+	std::cout << inst << std::endl;
 
 	/*nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
 	n or nibble - A 4-bit value, the lowest 4 bits of the instruction
@@ -72,7 +88,7 @@ void VirtualChip8::EmulateCycle() {
 	kk = inst & 0x00FF;
 
 	//Decode (switch) Execute (case)
-	tick();
+	//tick();
 	
 	switch (opcode) {
 	case 0x0:
@@ -82,14 +98,15 @@ void VirtualChip8::EmulateCycle() {
 			}
 		}
 		else if (inst == 0x00EE) {
-			exit(0);
+			pc = *((unsigned int*)(mem.stack) + sp);
+			sp++;
 		}
 		break;
 	case 0x1:
-		pc = inst & 0x0FFF;
+		pc = nnn;
 		break;
 	case 0x2:
-		sp++;
+		sp--;
 		*((unsigned int*)(mem.stack) + sp) = pc;
 		pc = nnn;
 		break;
@@ -153,7 +170,7 @@ void VirtualChip8::EmulateCycle() {
 		I = nnn;
 		break;
 	case 0xB:
-		pc = V[0] + nnn;
+		pc = (V[0] + nnn);
 		break;
 	case 0xC:
 		V[x] = (std::rand() % 255) & kk;
@@ -161,9 +178,9 @@ void VirtualChip8::EmulateCycle() {
 	case 0xD:
 		collision = false;
 		for (int i = 0; i < n; ++i) {
-			if (gfx[V[x] * V[y]] == *(mem.fontset + I + i))
+			if (gfx[V[x] % MAX_WIDTH + (V[y] * MAX_WIDTH)] == *(mem.fontset + I + i))
 				collision = true;
-			gfx[V[x] * V[y]] ^= *(mem.fontset + I + i);
+			gfx[V[x] + (V[y] * MAX_WIDTH)] ^= *(mem.fontset + I + i);
 		}
 		V[0xF] = collision;
 		break;
@@ -214,8 +231,8 @@ void VirtualChip8::EmulateCycle() {
 		break;
 	default:
 			std::cout << inst;
-			// std::cerr << "Invalid instruction: Something went wrong." << std::endl;
-			// std::exit(1);
+			std::cerr << "Invalid instruction: Something went wrong." << std::endl;
+			std::exit(1);
 	}
 	
 	tick();
@@ -223,5 +240,5 @@ void VirtualChip8::EmulateCycle() {
 
 // Regulates the speed of the emulator
 void VirtualChip8::tick() {
-	Sleep(HZ);
+	//Sleep(HZ);
 }
