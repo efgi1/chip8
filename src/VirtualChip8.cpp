@@ -5,7 +5,7 @@ VirtualChip8::VirtualChip8() {
 	srand(std::time(nullptr));
 	V = new unsigned char[NO_REGS];
 	I = 0;
-	pc = 0;
+	pc = 0x200;
 	sp = 0;
 	key = new unsigned char[NO_INPUTS];
 	gfx = new unsigned char[MAX_WIDTH * MAX_HEIGHT];
@@ -62,14 +62,13 @@ void VirtualChip8::LoadCode(std::string filename) {
 void VirtualChip8::EmulateCycle() {
 	// Fetch (NOTE codes stored in big endian)
 	tick();
-	unsigned short big, inst, opcode, x, y, kk, nnn, n;
+	unsigned short big, inst, opcode, x, y, kk, nnn, n, sprite;
 	bool collision;
 	const unsigned short FONTSET_SPRITE_SIZE = 10;
-	big = *((unsigned short*)(mem.code) + pc);
+	big = *(unsigned short*)(mem.ENTIRE + pc);
 	inst = _byteswap_ushort(big);
 	std::cout << std::hex << "pc: " << pc << std::endl;
-	std::cout << "Location: " << (unsigned short*)(mem.code) + pc << std::endl;
-	pc++;
+	pc+=2;
 	
 
 	
@@ -112,15 +111,15 @@ void VirtualChip8::EmulateCycle() {
 		break;
 	case 0x3:
 		if (V[x] == kk)
-			pc++;
+			pc+=2;
 		break;
 	case 0x4:
 		if (V[x] != kk)
-			pc++;
+			pc+=2;
 		break;
 	case 0x5:
 		if (V[x] == V[y])
-			pc++;
+			pc+=2;
 		break;
 	case 0x6:
 		V[x] = kk;
@@ -155,7 +154,7 @@ void VirtualChip8::EmulateCycle() {
 			V[x] = V[y] - V[x];
 			break;
 		case 0xE:
-			V[0xF] = V[x] >> 15u;
+			V[0xF] = V[x] >> 7u;
 			V[x] *= 2;
 			break;
 		default:
@@ -164,7 +163,7 @@ void VirtualChip8::EmulateCycle() {
 		break;
 	case 0x9:
 		if (V[x] != V[y])
-			pc++;
+			pc+=2;
 		break;
 	case 0xA:
 		I = nnn;
@@ -177,10 +176,15 @@ void VirtualChip8::EmulateCycle() {
 		break;
 	case 0xD:
 		collision = false;
-		for (int i = 0; i < n; ++i) {
-			if (gfx[V[x] % MAX_WIDTH + (V[y] * MAX_WIDTH)] == *(mem.fontset + I + i))
-				collision = true;
-			gfx[V[x] + (V[y] * MAX_WIDTH)] ^= *(mem.fontset + I + i);
+		for (short yLine = 0; yLine < n && (yLine + V[y]) < MAX_HEIGHT; ++yLine) {
+			sprite = mem.ENTIRE[I + yLine];
+			for (short xLine = 0; xLine < 8; ++xLine) {
+				if (((sprite >> (7 - xLine)) & 1) == 1) {
+					if (gfx[(V[x] + xLine) + ((V[y] + yLine) * 64)] == 1)
+						collision = true;
+					gfx[(V[x] + xLine) + ((V[y] + yLine) * 64)] ^= 1;
+				}
+			}
 		}
 		V[0xF] = collision;
 		break;
@@ -214,18 +218,17 @@ void VirtualChip8::EmulateCycle() {
 			I = V[x] * FONTSET_SPRITE_SIZE * sizeof(unsigned short);
 			break;
 		case 0x33:
-			*(mem.ENTIRE + I) = V[x] & 0x000F;
-			*(mem.ENTIRE + I + 1) = (V[x] & 0x00F0) >> 4u;
-			*(mem.ENTIRE + I + 2) = (V[x] & 0x0F00) >> 8u;
-			*(mem.ENTIRE + I + 3) = (V[x] & 0xF000) >> 12u;
+			*(mem.ENTIRE + I) = V[x] / 100;
+			*(mem.ENTIRE + I + 1) = (V[x] / 10) % 10;
+			*(mem.ENTIRE + I + 2) = V[x] % 10;
 			break;
 		case 0x55:
-			for (int i = 0; i < NO_REGS; ++i)
+			for (int i = 0; i <= x; ++i)
 				*((unsigned short*)(mem.ENTIRE + I) + i) = V[i];
 			break;
 		case 0x65:
-			for (int i = 0; i < NO_REGS; ++i)
-				V[i] = * ((unsigned short*)(mem.ENTIRE + I) + i);
+			for (int i = 0; i <= x; ++i)
+				V[i] = *((unsigned short*)(mem.ENTIRE + I) + i);
 			break;
 		}
 		break;

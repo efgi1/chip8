@@ -25,16 +25,15 @@ void Display::init() {
         std::cout << "Failed to initialize GLAD" << std::endl;
         exit(-1);
     }
-    Shader ourShader("C:\\Users\\nateh\\Desktop\\Projects\\chip8\\src\\shader.vs", "C:\\Users\\nateh\\Desktop\\Projects\\chip8\\src\\shader.fs");
-    shader = &ourShader;
+    shader = new Shader("C:\\Users\\nateh\\Desktop\\Projects\\chip8\\src\\shader.vs", "C:\\Users\\nateh\\Desktop\\Projects\\chip8\\src\\shader.fs");
     shader->use();
-    float xPixel = 2.0 / SCR_WIDTH;
-    float yPixel = 2.0 / SCR_HEIGHT;
+    float const xPixel = 2.0 / 64.0;
+    float const yPixel = 2.0 / 32.0;
 
     float vertices[] = {
-    -1.0f + 1, 1.0f,          0.0f,  // top right
-    -1.0f + 1, 1.0f - 1, 0.0f,  // bottom right
-    -1.0f,          1.0f - 1, 0.0f,  // bottom left
+    -1.0f + xPixel, 1.0f,          0.0f,  // top right
+    -1.0f + xPixel, 1.0f - yPixel, 0.0f,  // bottom right
+    -1.0f,          1.0f - yPixel, 0.0f,  // bottom left
     -1.0f,          1.0f,          0.0f   // top left 
     };
     unsigned int indices[] = {
@@ -68,15 +67,24 @@ void Display::init() {
     glBindVertexArray(0);
 }
 
-void Display::nextScreen()
+void Display::nextScreen(unsigned char* gfx)
 {
     processInput();
-    // TODO WRONG PLACE
+    
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    int pos[3];
-    for (int i = 0; i < 64 * 32; ++i) {
-        drawPixel(pos);
+    int x = 0, y = 0;
+    float pos[3];
+    pos[2] = 0;
+
+    for (int i = 0; i < MAX_WIDTH * MAX_HEIGHT; ++i) {
+        x = (i % 64);
+        y = (i / 64);
+        pos[0] = x / (float)(MAX_WIDTH) * 2;
+        pos[1] = -y / (float)(MAX_HEIGHT) * 2;
+        //TODO figure out GFX
+        if (gfx[i])
+            drawPixel(pos);
     }
     
     glfwSwapBuffers(window);
@@ -89,8 +97,10 @@ void Display::processInput()
         glfwSetWindowShouldClose(window, true);
 }
 
-void Display::drawPixel(int* offset)
+void Display::drawPixel(float* offset)
 {
+    int vertexOffsetLocation = glGetUniformLocation(shader->ID, "offset");
+    glUniform3f(vertexOffsetLocation, offset[0], offset[1], offset[2]);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
@@ -99,6 +109,7 @@ void Display::End() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
+    delete shader;
     glfwTerminate();
 }
 

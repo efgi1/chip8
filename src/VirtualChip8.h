@@ -13,8 +13,6 @@
 #define MEM_SIZE 1024 * 4 // 4 KB
 #define NO_REGS 16
 #define NO_INPUTS 16
-#define MAX_WIDTH 64
-#define MAX_HEIGHT 32
 #define HZ 60 / 1000 // Speed at which the system runs in cycles per millisecond
 
 const unsigned char chip8_fontset[80] =
@@ -54,6 +52,7 @@ public:
 	void LoadCode(std::string filename);
 	void EmulateCycle();
 	Display display;
+	unsigned char* gfx;
 private:
 	Memory mem;
 	
@@ -67,7 +66,6 @@ private:
 	unsigned short sp;
 
 	unsigned char *key;
-	unsigned char *gfx;
 	unsigned char delay_timer;
 	unsigned char sound_timer;
 	

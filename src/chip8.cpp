@@ -21,7 +21,8 @@ int main(int argc, char** argv)
 		vm.EmulateCycle();
 
 		// Render
-		vm.display.nextScreen();
+		vm.display.nextScreen(vm.gfx);
+		
 
 		glfwPollEvents();
 	}
