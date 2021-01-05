@@ -5,4 +5,4 @@ Goals:
 - Learn more about computer architecture
 - Practice C++
 - Learn CMake
-- Have fun :)
+- Continue learning OpenGL
