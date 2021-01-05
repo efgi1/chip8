@@ -40,7 +40,7 @@ struct Memory {
 	unsigned char* fontset = ENTIRE;								// 0x000 - 0x1FF
 	unsigned char* code = ENTIRE + 0x200;							// 0x200 - 0xE9F
 	unsigned char* stack = ENTIRE + 0xEFF;							// 0xEA0 - 0xEFF starting at 0xEFF
-	unsigned char* disp_ref = ENTIRE + 0xF00;						// 0xF00 - 0xFFF
+	unsigned char* disp_ref = ENTIRE + 0xFFF;						// 0xF00 - 0xFFF
 };
 
 
@@ -61,15 +61,16 @@ private:
 	// Subtraction - "no borrow" flag
 	// Draw - set upon pixel collision
 	unsigned char* V;
-	unsigned int I;
-	unsigned int pc;
-	unsigned short sp;
+	unsigned short I;
+	unsigned short pc;
+	unsigned char sp;
 
 	unsigned char *key;
 	unsigned char delay_timer;
 	unsigned char sound_timer;
 	
 	void tick();
+	void MakeSound();
 
 };
 

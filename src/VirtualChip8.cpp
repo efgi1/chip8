@@ -6,7 +6,7 @@ VirtualChip8::VirtualChip8() {
 	V = new unsigned char[NO_REGS];
 	I = 0;
 	pc = 0x200;
-	sp = 0;
+	sp = 1;
 	key = new unsigned char[NO_INPUTS];
 	gfx = new unsigned char[MAX_WIDTH * MAX_HEIGHT];
 	display = Display();
@@ -14,8 +14,8 @@ VirtualChip8::VirtualChip8() {
 	sound_timer = 0;
 	
 	// Set the fontset
-	unsigned short length = *(&chip8_fontset + 1) - chip8_fontset;
-	for (int i = 0; i < length; ++i)
+	unsigned int length = 0x1FF;
+	for (unsigned int i = 0; i < length; ++i)
 		mem.fontset[i] = chip8_fontset[i];
 	
 
@@ -41,38 +41,33 @@ void VirtualChip8::LoadCode(std::string filename) {
 	{
 		// Get size of file and allocate a buffer to hold the contents
 		std::streampos size = file.tellg();
-		char* buffer = new char[size];
 
 		// Go back to the beginning of the file and fill the buffer
 		file.seekg(0, std::ios::beg);
-		file.read(buffer, size);
+		file.read((char*)mem.code, size);
 		file.close();
-
-		// Load the ROM contents into the Chip8's memory, starting at 0x200
-		for (long i = 0; i < size; ++i)
-		{
-			mem.code[i] = buffer[i];
-		}
-
-		delete[] buffer;
 	}
 }
 
 // Fetch, Decode, Execute are each one tick
 void VirtualChip8::EmulateCycle() {
-	// Fetch (NOTE codes stored in big endian)
+	const unsigned short FONTSET_SPRITE_SIZE = 5;
+
 	tick();
-	unsigned short big, inst, opcode, x, y, kk, nnn, n, sprite;
+	unsigned char x, y, kk, n;
+	unsigned short big, inst, opcode, nnn, sprite;
 	bool collision;
-	const unsigned short FONTSET_SPRITE_SIZE = 10;
+	
+
+	// Fetch (NOTE codes stored in big endian)
 	big = *(unsigned short*)(mem.ENTIRE + pc);
 	inst = _byteswap_ushort(big);
-	std::cout << std::hex << "pc: " << pc << std::endl;
+	//std::cout << std::hex << "pc: " << pc << std::endl;
 	pc+=2;
 	
 
 	
-	std::cout << inst << std::endl;
+	//std::cout << inst << std::endl;
 
 	/*nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
 	n or nibble - A 4-bit value, the lowest 4 bits of the instruction
@@ -87,8 +82,14 @@ void VirtualChip8::EmulateCycle() {
 	kk = inst & 0x00FF;
 
 	//Decode (switch) Execute (case)
-	//tick();
+	tick();
 	
+	if (delay_timer > 0)
+		--delay_timer;
+	if (sound_timer > 0) {
+		MakeSound();
+		--sound_timer;
+	}
 	switch (opcode) {
 	case 0x0:
 		if (inst == 0x00E0) {
@@ -97,7 +98,7 @@ void VirtualChip8::EmulateCycle() {
 			}
 		}
 		else if (inst == 0x00EE) {
-			pc = *((unsigned int*)(mem.stack) + sp);
+			pc = *((unsigned short*)(mem.stack) - sp);
 			sp++;
 		}
 		break;
@@ -106,7 +107,7 @@ void VirtualChip8::EmulateCycle() {
 		break;
 	case 0x2:
 		sp--;
-		*((unsigned int*)(mem.stack) + sp) = pc;
+		*((unsigned short*)(mem.stack) - sp) = pc;
 		pc = nnn;
 		break;
 	case 0x3:
@@ -125,9 +126,13 @@ void VirtualChip8::EmulateCycle() {
 		V[x] = kk;
 		break;
 	case 0x7:
-		V[x] = V[x] + kk;
+		V[x] += kk;
+		break;
 	case 0x8:
 		switch (n) {
+		case 0x0:
+			V[x] = V[y];
+			break;
 		case 0x1:
 			V[x] = V[x] | V[y];
 			break;
@@ -139,14 +144,14 @@ void VirtualChip8::EmulateCycle() {
 			break;
 		case 0x4:
 			V[0xF] = (V[x] + V[y]) > 255;
-			V[x] = (V[x] + V[y]) & 0x00FF;
+			V[x] = (V[x] + V[y]);
 			break;
 		case 0x5:
 			V[0xF] = V[x] > V[y];
 			V[x] -= V[y];
 			break;
 		case 0x6:
-			V[0xF] = V[x] & 0x0001;
+			V[0xF] = V[x] & 0x01;
 			V[x] /= 2;
 			break;
 		case 0x7:
@@ -194,6 +199,7 @@ void VirtualChip8::EmulateCycle() {
 		case 0x9E:
 			break;
 		case 0xA1:
+			pc += 2;
 			break;
 		}
 		break;
@@ -203,7 +209,7 @@ void VirtualChip8::EmulateCycle() {
 			V[x] = delay_timer;
 			break;
 		case 0x0A:
-			// TODO key press
+			V[x] = display.WaitForInput();
 			break;
 		case 0x15:
 			delay_timer = V[x];
@@ -215,20 +221,20 @@ void VirtualChip8::EmulateCycle() {
 			I += V[x];
 			break;
 		case 0X29:
-			I = V[x] * FONTSET_SPRITE_SIZE * sizeof(unsigned short);
+			I = V[x] * FONTSET_SPRITE_SIZE;
 			break;
 		case 0x33:
-			*(mem.ENTIRE + I) = V[x] / 100;
-			*(mem.ENTIRE + I + 1) = (V[x] / 10) % 10;
-			*(mem.ENTIRE + I + 2) = V[x] % 10;
+			mem.ENTIRE[I] = V[x] / 100;
+			mem.ENTIRE[I + 1] = (V[x] / 10) % 10;
+			mem.ENTIRE[I + 2] = V[x] % 10;
 			break;
 		case 0x55:
-			for (int i = 0; i <= x; ++i)
-				*((unsigned short*)(mem.ENTIRE + I) + i) = V[i];
+			for (int i = 0; i <= x; i++)
+				mem.ENTIRE[I + i] = V[i];
 			break;
 		case 0x65:
-			for (int i = 0; i <= x; ++i)
-				V[i] = *((unsigned short*)(mem.ENTIRE + I) + i);
+			for (int i = 0; i <= x; i++)
+				V[i] = mem.ENTIRE[I + i];
 			break;
 		}
 		break;
@@ -243,5 +249,10 @@ void VirtualChip8::EmulateCycle() {
 
 // Regulates the speed of the emulator
 void VirtualChip8::tick() {
-	//Sleep(HZ);
+	Sleep(HZ);
+}
+
+void VirtualChip8::MakeSound()
+{
+	std::cout << "BEEP" << std::endl;
 }

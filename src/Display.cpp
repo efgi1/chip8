@@ -27,8 +27,8 @@ void Display::init() {
     }
     shader = new Shader("C:\\Users\\nateh\\Desktop\\Projects\\chip8\\src\\shader.vs", "C:\\Users\\nateh\\Desktop\\Projects\\chip8\\src\\shader.fs");
     shader->use();
-    float const xPixel = 2.0 / 64.0;
-    float const yPixel = 2.0 / 32.0;
+    float const xPixel = 2.0 / MAX_WIDTH;
+    float const yPixel = 2.0 / MAX_HEIGHT;
 
     float vertices[] = {
     -1.0f + xPixel, 1.0f,          0.0f,  // top right
@@ -68,9 +68,8 @@ void Display::init() {
 }
 
 void Display::nextScreen(unsigned char* gfx)
-{
+{   
     processInput();
-    
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     int x = 0, y = 0;
@@ -97,6 +96,12 @@ void Display::processInput()
         glfwSetWindowShouldClose(window, true);
 }
 
+unsigned short Display::WaitForInput()
+{
+    while (glfwGetKey(window, GLFW_KEY_W) != GLFW_PRESS) {};
+    return 1;
+}
+
 void Display::drawPixel(float* offset)
 {
     int vertexOffsetLocation = glGetUniformLocation(shader->ID, "offset");
@@ -111,6 +116,11 @@ void Display::End() {
     glDeleteBuffers(1, &EBO);
     delete shader;
     glfwTerminate();
+}
+
+bool Display::StayOpen()
+{
+    return !glfwWindowShouldClose(window);
 }
 
 Display::~Display()

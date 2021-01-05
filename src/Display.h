@@ -16,9 +16,11 @@ public:
 	~Display();
 	void nextScreen(unsigned char* gfx);
 	void processInput();
+	unsigned short WaitForInput();
 	void drawPixel(float* offset);
 	void init();
 	void End();
+	bool StayOpen();
 	Shader* shader;
 private:
 	GLFWwindow* window;

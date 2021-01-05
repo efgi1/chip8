@@ -15,11 +15,11 @@ int main(int argc, char** argv)
 	}
 
 	vm.display.init();
-
-	for (;;)
+	char t = ' ';
+	while(vm.display.StayOpen())
 	{
 		vm.EmulateCycle();
-
+		
 		// Render
 		vm.display.nextScreen(vm.gfx);
 		
