@@ -10,6 +10,7 @@
 #include <irrKlang.h>
 
 #include "Display.h"
+#include "Input.h"
 
 #define MEM_SIZE 1024 * 4 // 4 KB
 #define NO_REGS 16
@@ -52,6 +53,7 @@ public:
 	void LoadCode(std::string filename);
 	void EmulateCycle();
 	Display display;
+	Input* input;
 	unsigned char* gfx;
 
 private:

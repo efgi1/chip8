@@ -10,6 +10,7 @@ VirtualChip8::VirtualChip8() {
 	key = new unsigned char[NO_INPUTS];
 	gfx = new unsigned char[MAX_WIDTH * MAX_HEIGHT];
 	display = Display();
+	input = new Input;
 	soundEngine = irrklang::createIrrKlangDevice();
 	sound = soundEngine->play2D("C:\\Users\\nateh\\Desktop\\Projects\\chip8\\tone.wav", false, true);
 	delay_timer = 0;
@@ -36,6 +37,7 @@ VirtualChip8::~VirtualChip8() {
 	delete[] V;
 	delete[] key;
 	delete[] gfx;
+	delete input;
 	sound->drop();
 }
 
@@ -60,7 +62,7 @@ void VirtualChip8::LoadCode(std::string filename) {
 void VirtualChip8::EmulateCycle() {
 	const unsigned short FONTSET_SPRITE_SIZE = 5;
 
-	tick();
+	//tick();
 	unsigned char x, y, kk, n;
 	unsigned short big, inst, opcode, nnn, sprite;
 	bool collision;
@@ -89,7 +91,7 @@ void VirtualChip8::EmulateCycle() {
 	kk = inst & 0x00FF;
 
 	//Decode (switch) Execute (case)
-	tick();
+	//tick();
 	
 	if (delay_timer > 0)
 		--delay_timer;
@@ -101,6 +103,9 @@ void VirtualChip8::EmulateCycle() {
 	else if (sound_timer == 0 && !sound->getIsPaused()) {
 		sound->setIsPaused(true);
 	}
+
+	input->ProcessInput(display.window);
+
 	switch (opcode) {
 	case 0x0:
 		if (inst == 0x00E0) {
@@ -208,9 +213,14 @@ void VirtualChip8::EmulateCycle() {
 		// TODO add processing input
 		switch (kk) {
 		case 0x9E:
+			if (input->WasPressed(display.window, V[x])) {
+				pc += 2;
+			}
 			break;
 		case 0xA1:
-			pc += 2;
+			if (!input->WasPressed(display.window, V[x])) {
+				pc += 2;
+			}
 			break;
 		}
 		break;
@@ -220,7 +230,7 @@ void VirtualChip8::EmulateCycle() {
 			V[x] = delay_timer;
 			break;
 		case 0x0A:
-			//V[x] = display.WaitForInput();
+			V[x] = input->WaitForInput(display.window);
 			break;
 		case 0x15:
 			delay_timer = V[x];
@@ -256,7 +266,7 @@ void VirtualChip8::EmulateCycle() {
 			std::exit(1);
 	}
 	
-	tick();
+	//tick();
 }
 
 // Regulates the speed of the emulator

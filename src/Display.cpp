@@ -69,7 +69,7 @@ void Display::init() {
 
 void Display::nextScreen(unsigned char* gfx)
 {   
-    processInput();
+    WindowCloseCheck();
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     int x = 0, y = 0;
@@ -90,17 +90,13 @@ void Display::nextScreen(unsigned char* gfx)
     glfwPollEvents();
 }
 
-void Display::processInput()
+void Display::WindowCloseCheck()
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
 
-unsigned short Display::WaitForInput()
-{
-    while (glfwGetKey(window, GLFW_KEY_W) != GLFW_PRESS) {};
-    return 1;
-}
+
 
 void Display::drawPixel(float* offset)
 {

@@ -1,3 +1,6 @@
+#ifndef DISPLAY_H
+#define DISPLAY_H
+
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -15,15 +18,16 @@ public:
 	Display();
 	~Display();
 	void nextScreen(unsigned char* gfx);
-	void processInput();
-	unsigned short WaitForInput();
+	void WindowCloseCheck();
 	void drawPixel(float* offset);
 	void init();
 	void End();
 	bool StayOpen();
-	Shader* shader;
-private:
+	
 	GLFWwindow* window;
+private:
 	unsigned int EBO, VAO, VBO;
+	Shader* shader;
 };
 
+#endif
