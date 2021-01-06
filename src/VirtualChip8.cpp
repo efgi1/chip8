@@ -10,9 +10,15 @@ VirtualChip8::VirtualChip8() {
 	key = new unsigned char[NO_INPUTS];
 	gfx = new unsigned char[MAX_WIDTH * MAX_HEIGHT];
 	display = Display();
+	soundEngine = irrklang::createIrrKlangDevice();
+	sound = soundEngine->play2D("C:\\Users\\nateh\\Desktop\\Projects\\chip8\\tone.wav", false, true);
 	delay_timer = 0;
 	sound_timer = 0;
 	
+	//clear Registers
+	for (int i = 0; i < NO_REGS; ++i)
+		V[i] = 0;
+
 	// Set the fontset
 	unsigned int length = 0x1FF;
 	for (unsigned int i = 0; i < length; ++i)
@@ -30,6 +36,7 @@ VirtualChip8::~VirtualChip8() {
 	delete[] V;
 	delete[] key;
 	delete[] gfx;
+	sound->drop();
 }
 
 // Reads the file and stores it in mem.code
@@ -87,8 +94,12 @@ void VirtualChip8::EmulateCycle() {
 	if (delay_timer > 0)
 		--delay_timer;
 	if (sound_timer > 0) {
-		MakeSound();
+		if(sound->getIsPaused())
+			sound->setIsPaused(false);
 		--sound_timer;
+	}
+	else if (sound_timer == 0 && !sound->getIsPaused()) {
+		sound->setIsPaused(true);
 	}
 	switch (opcode) {
 	case 0x0:
@@ -147,7 +158,7 @@ void VirtualChip8::EmulateCycle() {
 			V[x] = (V[x] + V[y]);
 			break;
 		case 0x5:
-			V[0xF] = V[x] > V[y];
+			V[0xF] = V[x] >= V[y];
 			V[x] -= V[y];
 			break;
 		case 0x6:
@@ -155,7 +166,7 @@ void VirtualChip8::EmulateCycle() {
 			V[x] /= 2;
 			break;
 		case 0x7:
-			V[0xF] = V[y] > V[x];
+			V[0xF] = V[y] >= V[x];
 			V[x] = V[y] - V[x];
 			break;
 		case 0xE:
@@ -209,7 +220,7 @@ void VirtualChip8::EmulateCycle() {
 			V[x] = delay_timer;
 			break;
 		case 0x0A:
-			V[x] = display.WaitForInput();
+			//V[x] = display.WaitForInput();
 			break;
 		case 0x15:
 			delay_timer = V[x];
@@ -219,6 +230,7 @@ void VirtualChip8::EmulateCycle() {
 			break;
 		case 0x1E:
 			I += V[x];
+			V[0xF] = I > 0xFFF;
 			break;
 		case 0X29:
 			I = V[x] * FONTSET_SPRITE_SIZE;
@@ -252,7 +264,3 @@ void VirtualChip8::tick() {
 	Sleep(HZ);
 }
 
-void VirtualChip8::MakeSound()
-{
-	std::cout << "BEEP" << std::endl;
-}

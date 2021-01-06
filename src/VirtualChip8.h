@@ -7,6 +7,7 @@
 #include <fstream>
 #include <Windows.h>
 #include <intrin.h>
+#include <irrKlang.h>
 
 #include "Display.h"
 
@@ -44,7 +45,6 @@ struct Memory {
 };
 
 
-
 class VirtualChip8 {
 public:
 	VirtualChip8();
@@ -53,9 +53,9 @@ public:
 	void EmulateCycle();
 	Display display;
 	unsigned char* gfx;
+
 private:
 	Memory mem;
-	
 	// VF doubles as a flag in some cases:
 	// Addition - Carry flag
 	// Subtraction - "no borrow" flag
@@ -66,11 +66,12 @@ private:
 	unsigned char sp;
 
 	unsigned char *key;
+	irrklang::ISoundEngine* soundEngine;
+	irrklang::ISound* sound;
 	unsigned char delay_timer;
 	unsigned char sound_timer;
 	
 	void tick();
-	void MakeSound();
 
 };
 

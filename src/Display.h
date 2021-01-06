@@ -7,8 +7,8 @@
 #define MAX_HEIGHT 32
 
 // SCALED BY 20
-const unsigned int SCR_WIDTH = 64 * 20;
-const unsigned int SCR_HEIGHT = 32*20;
+const unsigned int SCR_WIDTH = MAX_WIDTH * 20;
+const unsigned int SCR_HEIGHT = MAX_HEIGHT * 20;
 
 class Display {
 public:
