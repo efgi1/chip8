@@ -1,0 +1,17 @@
+Input / Keyboard sim
+1 | 2 | 3 | 4
+Q | W | E | R
+A | S | D | F
+Z | X | C | V
+
+15PUZZLE - press any key to switch the blank space with that position
+BRIX - Q is left E is right
+INVADERS - W to start game and shoot, E right, Q left
+MISSLE - S to shoot
+PONG - Left controls 1- UP Q - DOWN Right controlss 4- UP R- DOWN
+PONG2 - Left controls 1- UP Q - DOWN Right controlss 4- UP R- DOWN
+PUZZLE - No input, just for show
+TANK - W to shoot E right Q left 2 Down S UP
+TETRIS - E Right W left Q rotate 
+UFO - W launches straight E right Q left
+VBRIX - A to start Q down 1 UP
