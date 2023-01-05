@@ -19,17 +19,17 @@ void Input::ProcessInput(GLFWwindow* window)
         if (glfwGetKey(window, keyMap.first) == GLFW_PRESS) {
             pressed[keyMap.second] = true;
         }
+        else {
+            pressed[keyMap.second] = false;
+        }
     }
 }
 
 unsigned char Input::WaitForInput(GLFWwindow* window)
 {
-    while (true) {
-        for (auto const& keyMap: keyboardMap){
-            if (pressed[keyMap.second]) {
-                pressed[keyMap.second];
-                return keyMap.second;
-            }
+    for (auto const& keyMap: keyboardMap){
+        if (pressed[keyMap.second]) {
+            return keyMap.second;
         }
     }
 }

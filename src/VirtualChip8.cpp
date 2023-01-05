@@ -12,7 +12,7 @@ VirtualChip8::VirtualChip8() {
 	display = Display();
 	input = new Input;
 	soundEngine = irrklang::createIrrKlangDevice();
-	sound = soundEngine->play2D("C:\\Users\\nateh\\Desktop\\Projects\\chip8\\tone.wav", false, true);
+	sound = soundEngine->play2D("tone.wav", false, true);
 	delay_timer = 0;
 	sound_timer = 0;
 	
@@ -66,16 +66,16 @@ void VirtualChip8::EmulateCycle() {
 	unsigned char x, y, kk, n;
 	unsigned short big, inst, opcode, nnn, sprite;
 	bool collision;
-	
+
 
 	// Fetch (NOTE codes stored in big endian)
 	big = *(unsigned short*)(mem.ENTIRE + pc);
 	inst = _byteswap_ushort(big);
 	//std::cout << std::hex << "pc: " << pc << std::endl;
-	pc+=2;
-	
+	pc += 2;
 
-	
+
+
 	//std::cout << inst << std::endl;
 
 	/*nnn or addr - A 12-bit value, the lowest 12 bits of the instruction
@@ -92,16 +92,22 @@ void VirtualChip8::EmulateCycle() {
 
 	//Decode (switch) Execute (case)
 	//tick();
-	
-	if (delay_timer > 0)
-		--delay_timer;
-	if (sound_timer > 0) {
-		if(sound->getIsPaused())
-			sound->setIsPaused(false);
-		--sound_timer;
-	}
-	else if (sound_timer == 0 && !sound->getIsPaused()) {
-		sound->setIsPaused(true);
+
+	auto elapsed = (std::chrono::system_clock::now() - interrupt_time).count();
+	if (elapsed > 1 / 60.)
+	{
+			if (delay_timer > 0)
+				--delay_timer;
+		if (sound_timer > 0) 
+		{
+			if (sound->getIsPaused())
+				sound->setIsPaused(false);
+			--sound_timer;
+		}
+		else if (sound_timer == 0 && !sound->getIsPaused()) {
+			sound->setIsPaused(true);
+		}
+		interrupt_time = std::chrono::system_clock::now();
 	}
 
 	input->ProcessInput(display.window);

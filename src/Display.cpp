@@ -70,7 +70,7 @@ void Display::init() {
 void Display::nextScreen(unsigned char* gfx)
 {   
     WindowCloseCheck();
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    //glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     int x = 0, y = 0;
     float pos[3];

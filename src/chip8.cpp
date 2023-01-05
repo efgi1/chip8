@@ -2,6 +2,7 @@
 //
 
 #include "chip8.h"
+#include <chrono>
 
 int main(int argc, char** argv)
 {
@@ -15,13 +16,27 @@ int main(int argc, char** argv)
 	}
 
 	vm.display.init();
-	char t = ' ';
+	std::chrono::time_point<std::chrono::system_clock> cpu_time, display_time;
+	cpu_time = std::chrono::system_clock::now();
+	display_time = std::chrono::system_clock::now();
 	while(vm.display.StayOpen())
 	{
-		vm.EmulateCycle();
+
+		std::chrono::duration<double> cpu_elapsed = std::chrono::system_clock::now() - cpu_time;
+		if (cpu_elapsed.count() > 1 / 500.)
+		{
+			vm.EmulateCycle();
+			cpu_time = std::chrono::system_clock::now();
+		}
 		
+
+		std::chrono::duration<double> display_elapsed = std::chrono::system_clock::now() - display_time;
 		// Render
-		vm.display.nextScreen(vm.gfx);
+		if (display_elapsed.count() > 1 / 60.)
+		{
+			vm.display.nextScreen(vm.gfx);
+			display_time = std::chrono::system_clock::now();
+		}
 		
 
 		glfwPollEvents();

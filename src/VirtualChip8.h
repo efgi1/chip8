@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include <intrin.h>
 #include <irrKlang.h>
+#include <chrono>
 
 #include "Display.h"
 #include "Input.h"
@@ -72,6 +73,7 @@ private:
 	irrklang::ISound* sound;
 	unsigned char delay_timer;
 	unsigned char sound_timer;
+	std::chrono::time_point<std::chrono::system_clock> interrupt_time = std::chrono::system_clock::now();
 	
 	void tick();
 
